@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Internship Assessment – Chatbot Application (No‑Code)  
 **Stack:** Nhost (Auth + Hasura + Postgres), Hasura GraphQL (queries/mutations/subscriptions), n8n (workflow), OpenRouter (LLM), Bolt.new (UI), Netlify (hosting)
 
@@ -238,3 +239,6 @@ Attach:
 - [`frontend/bolt_setup.md`](frontend/bolt_setup.md) – Bolt UI steps
 - [`deploy/netlify.md`](deploy/netlify.md) – deployment steps
 
+=======
+# subspace-chatbot-assessment
+>>>>>>> 608e13129f150aba062f7aefb6eca3716236860d
