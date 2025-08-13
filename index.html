@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subspace Chatbot</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="auth">
+        <h2>Login / Sign Up</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="signupUser()">Sign Up</button>
+        <button onclick="signinUser()">Sign In</button>
+    </div>
+
+    <div id="chat" style="display:none">
+        <h2>Chats</h2>
+        <input type="text" id="chatTitle" placeholder="New Chat Title">
+        <button onclick="createChat()">Create Chat</button>
+        <ul id="chatList"></ul>
+        <div id="messages">
+            <ul id="messageList"></ul>
+            <input type="text" id="messageInput" placeholder="Type message">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <button onclick="signoutUser()">Sign Out</button>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
