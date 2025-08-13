@@ -1,0 +1,109 @@
+{
+  "name": "Hasura -> n8n -> OpenRouter (sendMessage)",
+  "nodes": [
+    {
+      "id": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "name": "Hasura Webhook",
+      "parameters": {
+        "path": "hasura-sendMessage",
+        "responseMode": "lastNode",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "id": "HTTP1",
+      "type": "n8n-nodes-base.httpRequest",
+      "name": "Get Message (GraphQL)",
+      "parameters": {
+        "url": "https://<NHOST_BACKEND_URL>/v1/graphql",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {
+          "ignoreResponseCode": false
+        },
+        "sendHeaders": true,
+        "headerParametersJson": "{\"Content-Type\":\"application/json\",\"x-hasura-admin-secret\":\"{{$credentials.hasuraAdminSecret}}\"}",
+        "bodyParametersJson": "{\"query\":\"query GetMessage($id: uuid!){ messages_by_pk(id: $id){ id content chat_id user_id } }\",\"variables\":{\"id\":\"={{$json[\\\"input\\\"][\\\"message_id\\\"]}}\"}}"
+      }
+    },
+    {
+      "id": "IF1",
+      "type": "n8n-nodes-base.if",
+      "name": "Check Owner",
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json[\"data\"][\"messages_by_pk\"][\"user_id\"]}}",
+              "operation": "equal",
+              "value2": "={{$json[\"session_variables\"][\"x-hasura-user-id\"]}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "HTTP2",
+      "type": "n8n-nodes-base.httpRequest",
+      "name": "OpenRouter",
+      "parameters": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "jsonParameters": true,
+        "sendHeaders": true,
+        "headerParametersJson": "{\"Content-Type\":\"application/json\",\"Authorization\":\"Bearer {{$credentials.openRouterKey}}\"}",
+        "bodyParametersJson": "{\"model\":\"deepseek/deepseek-r1:free\",\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"={{$json[\\\"data\\\"][\\\"messages_by_pk\\\"][\\\"content\\\"]}}\"}]}"
+      }
+    },
+    {
+      "id": "HTTP3",
+      "type": "n8n-nodes-base.httpRequest",
+      "name": "Insert Bot Reply (GraphQL)",
+      "parameters": {
+        "url": "https://<NHOST_BACKEND_URL>/v1/graphql",
+        "method": "POST",
+        "jsonParameters": true,
+        "sendHeaders": true,
+        "headerParametersJson": "{\"Content-Type\":\"application/json\",\"x-hasura-admin-secret\":\"{{$credentials.hasuraAdminSecret}}\"}",
+        "bodyParametersJson": "{\"query\":\"mutation InsertBot($chat_id: uuid!, $content: String!, $user_id: String!){ insert_messages_one(object:{chat_id:$chat_id,content:$content,sender:\\\"bot\\\",user_id:$user_id}){ id } }\",\"variables\":{\"chat_id\":\"={{$json[\\\"data\\\"][\\\"messages_by_pk\\\"][\\\"chat_id\\\"]}}\",\"content\":\"={{$json[\\\"choices\\\"][0][\\\"message\\\"][\\\"content\\\"]}}\",\"user_id\":\"={{$json[\\\"session_variables\\\"][\\\"x-hasura-user-id\\\"]}}\"}}"
+      }
+    },
+    {
+      "id": "Respond1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "name": "Respond",
+      "parameters": {
+        "responseBody": "{\"success\":true,\"reply_text\":\"={{$json[\\\"choices\\\"][0][\\\"message\\\"][\\\"content\\\"]}}\",\"reply_message_id\":\"={{$json[\\\"data\\\"][\\\"insert_messages_one\\\"][\\\"id\\\"]}}\"}",
+        "responseCode": 200
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "Webhook1",
+      "to": "HTTP1"
+    },
+    {
+      "from": "HTTP1",
+      "to": "IF1"
+    },
+    {
+      "from": "IF1",
+      "to": "HTTP2",
+      "when": "true"
+    },
+    {
+      "from": "HTTP2",
+      "to": "HTTP3"
+    },
+    {
+      "from": "HTTP3",
+      "to": "Respond1"
+    }
+  ],
+  "credentials": {
+    "hasuraAdminSecret": "<set-in-n8n-credentials>",
+    "openRouterKey": "<set-in-n8n-credentials>"
+  }
+}

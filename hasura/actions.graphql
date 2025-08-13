@@ -1,0 +1,10 @@
+# hasura/actions.graphql
+type Mutation {
+  sendMessage(chat_id: uuid!, message_id: uuid!): SendMessageResponse!
+}
+
+type SendMessageResponse {
+  success: Boolean!
+  reply_text: String
+  reply_message_id: uuid
+}

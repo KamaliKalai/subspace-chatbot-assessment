@@ -1,0 +1,48 @@
+# graphql/operations.graphql
+
+# Create a chat
+mutation CreateChat($title: String!) {
+  insert_chats_one(object: { title: $title }) {
+    id
+    title
+    created_at
+  }
+}
+
+# Insert a user message
+mutation InsertMessage($chat_id: uuid!, $content: String!) {
+  insert_messages_one(object: { chat_id: $chat_id, content: $content, sender: "user" }) {
+    id
+    created_at
+    content
+  }
+}
+
+# Hasura Action to trigger bot
+mutation SendMessageAction($chat_id: uuid!, $message_id: uuid!) {
+  sendMessage(chat_id: $chat_id, message_id: $message_id) {
+    success
+    reply_text
+    reply_message_id
+  }
+}
+
+# Subscribe to all messages in a chat
+subscription OnMessages($chat_id: uuid!) {
+  messages(where: { chat_id: { _eq: $chat_id } }, order_by: { created_at: asc }) {
+    id
+    content
+    sender
+    created_at
+    user_id
+  }
+}
+
+# Optional: list chats
+query MyChats {
+  chats(order_by: { created_at: desc }) {
+    id
+    title
+    created_at
+  }
+}
